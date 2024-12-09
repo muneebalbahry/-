@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>متجر البائع</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            direction: rtl;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #333;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        header a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+            font-size: 16px;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            margin: 20px;
+        }
+
+        .product-card {
+            background-color: white;
+            padding: 20px;
+            margin: 10px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 220px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .product-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .product-card img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        button {
+            background-color: #28a745;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        .cart {
+            background-color: white;
+            padding: 20px;
+            position: fixed;
+            top: 10%;
+            right: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            border-radius: 8px;
+            z-index: 1000;
+            display: none;
+        }
+
+        .cart h3 {
+            margin-top: 0;
+        }
+
+        .cart ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .cart ul li {
+            margin: 10px 0;
+        }
+
+        .cart ul li span {
+            margin-left: 10px;
+            font-weight: bold;
+        }
+
+        .cart button {
+            background-color: #dc3545;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            width: 100%;
+        }
+
+        .cart button:hover {
+            background-color: #c82333;
+        }
+
+        .add-product-form {
+            display: none;
+            background-color: white;
+            padding: 20px;
+            position: fixed;
+            top: 10%;
+            left: 10%;
+            width: 300px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            z-index: 1001;
+        }
+
+        .add-product-form input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .close-form {
+            background-color: #dc3545;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .close-form:hover {
+            background-color: #c82333;
+        }
+
+        .add-product-form button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .add-product-form button:hover {
+            background-color: #0056b3;
+        }
+
+        .manage-products-btn {
+            margin-top: 20px;
+            background-color: #007bff;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .manage-products-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>متجر البائع</h1>
+    <a href="javascript:void(0)" onclick="showCart()">عرض السلة</a>
+    <button onclick="showAddProductForm()">إضافة منتج</button>
+</header>
+
+<main>
+    <section class="container" id="productSection">
+        <!-- المنتجات ستعرض هنا -->
+    </section>
+</main>
+
+<!-- سلة التسوق -->
+<div id="cart" class="cart">
+    <h3>سلة التسوق</h3>
+    <ul id="cartItems"></ul>
+    <button onclick="checkout()">إتمام الشراء</button>
+</div>
+
+<!-- نموذج إضافة منتج (البائع) -->
+<div id="addProductForm" class="add-product-form">
+    <h3>إضافة منتج جديد</h3>
+    <label for="productName">اسم المنتج:</label>
+    <input type="text" id="productName">
+    <label for="productPrice">السعر:</label>
+    <input type="number" id="productPrice">
+    <button onclick="addProduct()">إضافة المنتج</button>
+    <button class="close-form" onclick="closeAddProductForm()">إغلاق النموذج</button>
+</div>
+
+<script>
+// JavaScript code for managing products, cart, and form display
+
+let cart = [];
+let products = JSON.parse(localStorage.getItem("products")) || [];
+
+function addToCart(productName, price) {
+    cart.push({ name: productName, price: price });
+    localStorage.setItem("cart", JSON.stringify(cart));
+    updateCartDisplay();
+}
+
+function showCart() {
+    const cartDiv = document.getElementById('cart');
+    cartDiv.style.display = cart.length > 0 ? 'block' : 'none';
+    updateCartDisplay();
+}
+
+function updateCartDisplay() {
+    const cartItems = document.getElementById('cartItems');
+    cartItems.innerHTML = ''; // Clear current cart display
+
+    cart.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = `${item.name} - ${item.price} ريال`;
+        cartItems.appendChild(li);
+    });
+}
+
+function checkout() {
+    if (cart.length === 0) {
+        alert("السلة فارغة!");
+        return;
+    }
+    let total = cart.reduce((sum, item) => sum + item.price, 0);
+    alert(`إجمالي السعر: ${total} ريال. تم إتمام الشراء!`);
+    cart = [];
+    localStorage.setItem("cart", JSON.stringify(cart));
+    updateCartDisplay();
+}
+
+function showAddProductForm() {
+    document.getElementById('addProductForm').style.display = 'block';
+}
+
+function closeAddProductForm() {
+    document.getElementById('addProductForm').style.display = 'none';
+}
+
+function addProduct() {
+    const name = document.getElementById('productName').value;
+    const price = parseFloat(document.getElementById('productPrice').value);
+
+    if (name && !isNaN(price)) {
+        const newProduct = { name: name, price: price };
+        products.push(newProduct);
+        localStorage.setItem("products", JSON.stringify(products));
+        displayProducts();
+        closeAddProductForm();
+    } else {
+        alert("يرجى إدخال جميع البيانات بشكل صحيح");
+    }
+}
+
+function displayProducts() {
+    const productSection = document.getElementById('productSection');
+    productSection.innerHTML = ''; // Clear current products display
+
+    products.forEach(product => {
+        const productCard = document.createElement('div');
+        productCard.classList.add('product-card');
+        productCard.innerHTML = `
+            <h3>${product.name}</h3>
+            <p>السعر: ${product.price} ريال</p>
+            <button onclick="addToCart('${product.name}', ${product.price})">أضف إلى السلة</button>
+        `;
+        productSection.appendChild(productCard);
+    });
+}
+
+// Load products on page load
+displayProducts();
+
+</script>
+
+</body>
+</html>
